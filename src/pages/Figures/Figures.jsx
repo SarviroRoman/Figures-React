@@ -4,6 +4,7 @@ import {Button, Alert} from 'react-bootstrap';
 
 import './Figures.css';
 import Spinner from '../../components/Spinner/Spinner';
+import DelModal from '../../components/DelModal/DelModal';
 import APP from '../../App-constants';
 
 class Figures extends Component{
@@ -17,8 +18,11 @@ class Figures extends Component{
       isLoaded: false,
       deleteSuccess: false,
       showAlert: false,
+      showDelModal: false,
       alertSuccessDeleteText: '',
     };
+
+    this.modalDelClose = this.modalDelClose.bind(this);
   }
 
   componentDidMount() {
@@ -28,6 +32,7 @@ class Figures extends Component{
         this.setState({
           isLoaded: true,
           items: json,
+          currentIdDeleteFigure: Number
         })
       });
   }
@@ -46,14 +51,19 @@ class Figures extends Component{
           var index = figures.findIndex(figure => figure.id === id);
           figures.splice(index,1);
           this.setState({items: figures});
+          this.setState({ showDelModal: false })
           this.setState({alertSuccessDeleteText: `Figure number ${id} successfully removed`, showAlert: true});
         }
       });
   }
 
+  modalDelClose() {
+    this.setState({ showDelModal: false })
+  }
+
   render(){
 
-    var { isLoaded, items, deleteSuccess, showAlert, alertSuccessDeleteText } = this.state;
+    var { isLoaded, items, deleteSuccess, showAlert, alertSuccessDeleteText, showDelModal, currentIdDeleteFigure } = this.state;
 
     if (!isLoaded) {
       return <Spinner />
@@ -95,12 +105,8 @@ class Figures extends Component{
                   <td> {figure.area} </td>
                   <td> 
                     {/* спросить про байнд */}
-                    <Button variant="outline-danger btn-sm" onClick={(e) => this.deleteFigures(figure.id, e)} disabled={deleteSuccess}>
+                    <Button variant="outline-danger btn-sm" onClick={() => {this.setState({showDelModal: true, currentIdDeleteFigure: figure.id})}} disabled={deleteSuccess}>
                       Delete
-                      {
-                        deleteSuccess &&
-                        <span className="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
-                      }
                     </Button> 
                   </td>
                 </tr>
@@ -109,6 +115,17 @@ class Figures extends Component{
           </tbody>
 
         </table>
+
+        {
+          this.state.showDelModal &&
+          <DelModal 
+          show={showDelModal} 
+          modalDelClose={this.modalDelClose} 
+          deleteFigures={this.deleteFigures.bind(this, currentIdDeleteFigure)}
+          deleteSuccess = {deleteSuccess}
+          />
+        }
+
       </div>
     );  
   }
